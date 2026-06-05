@@ -46,7 +46,9 @@ public class PoseManager : MonoBehaviour
         for (int i = 0; i < 33; i++)
         {
             // UDPReceiver에서 파싱된 좌표를 가져와 배율(multiplier)을 곱해줍니다.
-            Vector3 targetPos = UDPReceiver.landmarkPositions[i] * multiplier;
+            Vector3 rawPos = UDPReceiver.landmarkPositions[i];
+
+            Vector3 targetPos = new Vector3(-rawPos.x, -rawPos.y, rawPos.z) * multiplier;
 
             // 유니티 3D 공간에 좌표 반영
             landmarks[i].transform.localPosition = targetPos;
