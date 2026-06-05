@@ -1,41 +1,60 @@
+import sys
 import cv2
+import socket
 import mediapipe as mp
+from mediapipe.tasks import python
+from mediapipe.tasks.python import vision
 
-# MediaPipe에서 관절(Pose)을 찾기 위한 부품들 가져오기
-mp_pose = mp.solutions.pose
-mp_drawing = mp.solutions.drawing_utils
-pose = mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5)
+print("1. OpenCV 및 통신 라이브러리 로드 성공!")
 
-# 컴퓨터에 연결된 기본 웹캠 열기 (0번은 내장/기본 웹캠)
+UDP_IP = "127.0.0.1"
+UDP_PORT = 5065
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+# 같은 폴더 안에 있는 모델을 정확히 바라봅니다
+model_path = 'pose_landmarker.task'
+
+try:
+    base_options = python.BaseOptions(model_asset_path=model_path)
+    options = vision.PoseLandmarkerOptions(base_options=base_options, output_segmentation_masks=False)
+    detector = vision.PoseLandmarker.create_from_options(options)
+    print("🎉 2. M4 맥북 최적화 AI 엔진 초기화 대성공!")
+except Exception as e:
+    print(f"❌ 엔진 초기화 실패: {e}")
+    sys.exit()
+
 cap = cv2.VideoCapture(0)
+print(f"📸 3. 웹캠 작동 중... (유니티 포트 {UDP_PORT}번으로 데이터 송신 시작)")
 
 while cap.isOpened():
     success, image = cap.read()
-    if not success:
-        print("웹캠을 찾을 수 없습니다.")
-        continue
+    if not success: continue
 
-    # 1. MediaPipe 처리를 위해 이미지 색상 상을 BGR에서 RGB로 변환
     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    results = pose.process(image_rgb)
+    mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=image_rgb)
+    detection_result = detector.detect(mp_image)
 
-    # 2. 화면에 관절 포인트와 연결선 그리기
-    if results.pose_landmarks:
-        mp_drawing.draw_landmarks(
-            image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS
-        )
+    if detection_result.pose_landmarks:
+        for landmark_list in detection_result.pose_landmarks:
+            data_string = ""
+            for lm in landmark_list:
+                data_string += f"{lm.x},{1 - lm.y},{lm.z},"
+            data_string = data_string[:-1]
+            
+            # 유니티로 전송
+            sock.sendto(data_string.encode(), (UDP_IP, UDP_PORT))
+            
+            # 초록색 관절 점 시각화
+            for lm in landmark_list:
+                h, w, _ = image.shape
+                cx, cy = int(lm.x * w), int(lm.y * h)
+                cv2.circle(image, (cx, cy), 5, (0, 255, 0), -1)
         
-        # [확인용] 오른쪽 어깨(ID: 12)의 3D 좌표 출력해보기
-        # MediaPipe는 총 33개의 관절 좌표(results.pose_landmarks.landmark)를 제공합니다.
-        right_shoulder = results.pose_landmarks.landmark[12]
-        print(f"오른쪽 어깨 좌표 -> X: {right_shoulder.x:.2f}, Y: {right_shoulder.y:.2f}, Z: {right_shoulder.z:.2f}")
+        print(f"유니티로 좌표 송신 중... (데이터 길이: {len(data_string)})", end="\r")
 
-    # 3. 결과를 화면에 보여주기
-    cv2.imshow('MediaPipe Motion Capture Test', image)
-
-    # 'q' 키를 누르면 종료
-    if cv2.waitKey(5) & 0xFF == ord('q'):
-        break
+    cv2.imshow('Wonhee M4 Mocap -> Unity', image)
+    if cv2.waitKey(5) & 0xFF == ord('q'): break
 
 cap.release()
 cv2.destroyAllWindows()
+print("\n👋 서버가 정상 종료되었습니다.")
