@@ -1,5 +1,8 @@
 # 🥊 3D Motion Capture Boxing Game
 
+<img width="1269" height="595" alt="image" src="https://github.com/user-attachments/assets/332b94aa-2f9d-4b9d-8de3-0faa27f73b18" />
+
+
 MediaPipe 기반 실시간 모션 캡처 기술을 활용한 인터랙티브 3D 복싱 게임입니다.
 
 Python에서 추출한 인체 관절 좌표 데이터를 UDP 통신을 통해 Unity로 실시간 전송하고, 이를 기반으로 플레이어 아바타를 제어하여 샌드백을 타격하는 물리 기반 게임 시스템을 구현했습니다.
