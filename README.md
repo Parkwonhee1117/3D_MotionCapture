@@ -227,11 +227,3 @@ https://github.com/user-attachments/assets/51e46698-e58d-451c-b225-3c561f469023
 
 
 ---
-
-
-
-## 👨‍💻 개발자
-
-박원희
-
-Computer Vision · Unity · Real-Time Networking · Game Development
