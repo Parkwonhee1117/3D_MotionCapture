@@ -216,7 +216,7 @@ HP UI & KO System
 
 [📺 시연 영상 보기]
 
-![Uploading Video Project 2.gif…]()
+<img width="426" height="240" alt="Video Project 2" src="https://github.com/user-attachments/assets/d2b64604-d42a-446e-bd98-642465e67d70" />
 
 ---
 
