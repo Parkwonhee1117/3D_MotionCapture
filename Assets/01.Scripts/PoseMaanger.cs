@@ -39,6 +39,8 @@ public class PoseManager : MonoBehaviour
 
     void LateUpdate()
     {
+        if (TargetObject.isGameOver) return;
+        
         if (udpReceiver == null || udpReceiver.landmarkPositions == null) return;
         Vector3[] rawPoints = udpReceiver.landmarkPositions;
         
@@ -65,7 +67,6 @@ public class PoseManager : MonoBehaviour
             Vector3 directionToSandbag = targetSandbag.position - transform.position;
             directionToSandbag.y = 0;
 
-            // Quaternion.LookRotation 뒤에 * Quaternion.Euler(0, 180, 0)
             Quaternion targetRotation = Quaternion.LookRotation(directionToSandbag) * Quaternion.Euler(0, 180, 0);
 
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 5f);
