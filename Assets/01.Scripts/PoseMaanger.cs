@@ -7,6 +7,8 @@ public class PoseManager : MonoBehaviour
     public float multiplier = 1.0f; 
     public Material lineMaterial;
 
+    public Transform targetSandbag;
+
     private GameObject[] landmarks = new GameObject[33];
     private LineRenderer[] lines = new LineRenderer[35];
     private int[,] connections = new int[,] {
@@ -56,6 +58,17 @@ public class PoseManager : MonoBehaviour
         {
             lines[i].SetPosition(0, landmarks[connections[i, 0]].transform.position);
             lines[i].SetPosition(1, landmarks[connections[i, 1]].transform.position);
+        }
+
+        if (targetSandbag != null)
+        {
+            Vector3 directionToSandbag = targetSandbag.position - transform.position;
+            directionToSandbag.y = 0;
+
+            // Quaternion.LookRotation 뒤에 * Quaternion.Euler(0, 180, 0)
+            Quaternion targetRotation = Quaternion.LookRotation(directionToSandbag) * Quaternion.Euler(0, 180, 0);
+
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 5f);
         }
     }
 }
