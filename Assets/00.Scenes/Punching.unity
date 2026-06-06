@@ -92488,7 +92488,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   udpReceiver: {fileID: 714675870}
   landmarkPrefab: {fileID: 331015395240734495, guid: 2d1771fe67c4247ca9e7766dbe8f5409, type: 3}
-  multiplier: 1
+  multiplier: 2
   lineMaterial: {fileID: 0}
   targetSandbag: {fileID: 248535170}
 --- !u!4 &2042759454
