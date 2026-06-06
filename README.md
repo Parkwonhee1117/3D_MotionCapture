@@ -218,6 +218,11 @@ HP UI & KO System
 
 <img width="426" height="240" alt="Video Project 2" src="https://github.com/user-attachments/assets/d2b64604-d42a-446e-bd98-642465e67d70" />
 
+
+https://github.com/user-attachments/assets/51e46698-e58d-451c-b225-3c561f469023
+
+
+
 ---
 
 
