@@ -2,56 +2,60 @@ using UnityEngine;
 
 public class PoseManager : MonoBehaviour
 {
-    // 아까 만든 UDPReceiver 스크립트를 연결할 변수
-    public UDPReceiver UDPReceiver;
+    public UDPReceiver udpReceiver;
+    public GameObject landmarkPrefab;
+    public float multiplier = 1.0f; 
+    public Material lineMaterial;
 
-    // 관절을 표시할 3D 구체(Sphere) 프리팹 또는 원본 오브젝트
-    public GameObject LandmarkPrefab;
-
-    // 생성된 33개의 구체들을 담아둘 배열
     private GameObject[] landmarks = new GameObject[33];
-
-    [Header("Scale Settings")]
-    public float multiplier = 10f; // 파이썬 좌표계(0~1)를 유니티 크기에 맞게 키워주는 배율
+    private LineRenderer[] lines = new LineRenderer[35];
+    private int[,] connections = new int[,] {
+        {0,1},{1,2},{2,3},{3,7},{0,4},{4,5},{5,6},{6,8},{9,10},
+        {11,12},{11,13},{13,15},{15,17},{15,19},{15,21},{17,19},
+        {12,14},{14,16},{16,18},{16,20},{16,22},{18,20},{11,23},
+        {12,24},{23,24},{23,25},{25,27},{27,29},{29,31},{31,27},
+        {24,26},{26,28},{28,30},{30,32},{32,28}
+    };
 
     void Start()
     {
-        // 1. Scene에 landmarkPrefab이 설정되어 있는지 확인
-        if (LandmarkPrefab == null)
-        {
-            // 만약 에디터에서 등록 안 했으면 기본 유니티 구체(Sphere)를 생성해서 씁니다.
-            LandmarkPrefab = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            LandmarkPrefab.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
-            LandmarkPrefab.SetActive(false); // 원본은 잠시 꺼둡니다.
-        }
-
-        // 2. 33개의 관절 구체를 미리 생성(Instantiate)해서 배열에 배치합니다.
         for (int i = 0; i < 33; i++)
         {
-            landmarks[i] = Instantiate(LandmarkPrefab, Vector3.zero, Quaternion.identity);
-            landmarks[i].name = $"Landmark_{i}";
-            landmarks[i].SetActive(true);
-            
-            // 이 스크립트가 붙은 오브젝트 하위로 정렬해서 Hierarchy를 깔끔하게 유지합니다.
-            landmarks[i].transform.parent = this.transform; 
+            landmarks[i] = Instantiate(landmarkPrefab ? landmarkPrefab : GameObject.CreatePrimitive(PrimitiveType.Sphere), transform);
+            landmarks[i].transform.localScale = Vector3.one * 0.05f;
+        }
+
+        for (int i = 0; i < 35; i++)
+        {
+            GameObject lineObj = new GameObject("Line_" + i);
+            lineObj.transform.parent = transform;
+            lines[i] = lineObj.AddComponent<LineRenderer>();
+            lines[i].startWidth = 0.02f; lines[i].endWidth = 0.02f;
+            lines[i].material = lineMaterial;
         }
     }
 
-    void Update()
+    void LateUpdate()
     {
-        // 안전장치: UDPReceiver가 없거나 데이터가 아직 안 들어왔다면 패스
-        if (UDPReceiver == null || UDPReceiver.landmarkPositions == null) return;
+        if (udpReceiver == null || udpReceiver.landmarkPositions == null) return;
+        Vector3[] rawPoints = udpReceiver.landmarkPositions;
+        
+        // 데이터의 중심점(골반)을 구함
+        Vector3 hipCenter = (rawPoints[23] + rawPoints[24]) * 0.5f;
 
-        // 3. 매 프레임마다 파이썬에서 들어온 좌표를 구체들의 위치에 실시간 대입합니다.
         for (int i = 0; i < 33; i++)
         {
-            // UDPReceiver에서 파싱된 좌표를 가져와 배율(multiplier)을 곱해줍니다.
-            Vector3 rawPos = UDPReceiver.landmarkPositions[i];
+            // 💡 여기서 중심점을 빼고 멀티플라이어를 곱한 뒤, 좌표계를 0,0,0으로 맞춤
+            Vector3 pos = (rawPoints[i] - hipCenter) * multiplier;
+            
+            // 유니티 월드 좌표로 변환 (상하 반전 해결)
+            landmarks[i].transform.localPosition = new Vector3(-pos.x, -pos.y, pos.z);
+        }
 
-            Vector3 targetPos = new Vector3(-rawPos.x, -rawPos.y, rawPos.z) * multiplier;
-
-            // 유니티 3D 공간에 좌표 반영
-            landmarks[i].transform.localPosition = targetPos;
+        for (int i = 0; i < 35; i++)
+        {
+            lines[i].SetPosition(0, landmarks[connections[i, 0]].transform.position);
+            lines[i].SetPosition(1, landmarks[connections[i, 1]].transform.position);
         }
     }
 }
