@@ -93,4 +93,13 @@ public class UDPReceiver : MonoBehaviour
         if (receiveThread != null && receiveThread.IsAlive) receiveThread.Abort();
         Debug.Log("[UDP] 수신 스레드가 안전하게 종료되었습니다.");
     }
+
+    void OnDisable() // 씬이 종료되거나 오브젝트가 비활성화될 때 실행
+{
+    if (client != null)
+    {
+        client.Close(); // 포트 점유 해제
+        Debug.Log("UDP 포트가 안전하게 닫혔습니다.");
+    }
+}
 }
